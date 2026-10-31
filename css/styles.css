@@ -126,6 +126,14 @@ dialog.sheet {
   margin: auto auto 0; border-radius: 20px 20px 0 0; background: var(--surface); color: var(--text);
 }
 @media (min-width: 640px) { dialog.sheet { margin: auto; border-radius: 20px; } }
+/* Picker: anchored to the top with a fixed height so the search bar never moves
+   (iOS keyboard + shrinking result list used to push it off-screen). */
+dialog.sheet.top {
+  margin: calc(8px + env(safe-area-inset-top)) auto auto; border-radius: 20px;
+  width: calc(100% - 16px); height: calc(var(--vvh, 100dvh) - 16px - env(safe-area-inset-top)); max-height: none;
+}
+dialog.sheet.top .sheet-inner { height: 100%; max-height: none; }
+dialog.sheet.top[open] { animation: none; }
 dialog.sheet::backdrop { background: rgba(0,0,0,.45); }
 dialog[open].sheet { animation: up .2s ease-out; }
 @keyframes up { from { transform: translateY(24px); opacity: .6; } }
@@ -138,7 +146,7 @@ input[type="search"] {
   width: 100%; min-height: 46px; border-radius: 12px; border: 1px solid var(--line); padding: 0 14px;
   font: inherit; background: var(--surface-2); color: var(--text);
 }
-.picker-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 120px; -webkit-overflow-scrolling: touch; }
+.picker-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .picker-list li + li { border-top: 1px solid var(--line); }
 .picker-list button {
   width: 100%; text-align: left; background: none; border: 0; padding: 12px 6px; cursor: pointer;

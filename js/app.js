@@ -666,6 +666,18 @@
     }
   })();
 
+  // Track the visible viewport (shrinks when the iOS keyboard opens) for the picker sheet height.
+  function syncViewport() {
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--vvh', h + 'px');
+  }
+  syncViewport();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncViewport);
+    window.visualViewport.addEventListener('scroll', function () { if (document.querySelector('#pickerDlg[open]')) window.scrollTo(0, 0); });
+  }
+  window.addEventListener('resize', syncViewport);
+
   bind();
   render();
 
