@@ -53,4 +53,4 @@ python3 -m http.server 8000   # then open http://localhost:8000
    - Android Chrome: **⋮ → Add to Home screen / Install app**
    - iOS Safari: **Share → Add to Home Screen**
 
-After changing app files, bump `VERSION` in `sw.js` so installed copies pick up the update.
+After changing app files, bump `VERSION` in `sw.js` and `APP_VERSION` in `js/app.js`. App code is served network-first, so installed copies update on the next open.

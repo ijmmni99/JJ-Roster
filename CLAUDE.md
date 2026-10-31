@@ -2,4 +2,4 @@
 
 - Commit and push directly to `main` (owner's standing instruction). No feature branches or PRs unless asked.
 - Run `npm test` before pushing (needs the roster PDFs in `test/fixtures/`, which are gitignored for privacy).
-- After changing app files, bump `VERSION` in `sw.js`.
+- After changing app files, bump `VERSION` in `sw.js` and `APP_VERSION` in `js/app.js` (shown in Settings).

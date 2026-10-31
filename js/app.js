@@ -3,6 +3,7 @@
   'use strict';
 
   var KEY = 'myroster.v1';
+  var APP_VERSION = '1.4';
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var Codes = window.ShiftCodes;
@@ -488,6 +489,7 @@
     $('setMonths').textContent = mk.length ? mk.map(function (k) { var p = k.split('-'); return MONTHS[+p[1] - 1].slice(0, 3) + ' ' + p[0]; }).join(', ') : 'None';
     document.querySelectorAll('input[name="theme"]').forEach(function (r) { r.checked = r.value === state.settings.theme; });
     $('icsOff').checked = !!state.settings.icsOff;
+    $('appVersion').textContent = 'Version ' + APP_VERSION;
     $('settingsDlg').showModal();
   }
 
@@ -769,7 +771,24 @@
   render();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* offline support unavailable */ }); });
+    var hadController = !!navigator.serviceWorker.controller;
+    var reloaded = false;
+    // When a new version takes over, reload once so the new code runs.
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadController || reloaded) { hadController = true; return; }
+      if (document.querySelector('dialog[open]')) return; // don't interrupt editing; next open picks it up
+      reloaded = true;
+      location.reload();
+    });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+        // Installed apps (esp. iOS) rarely check for updates on their own: check on open and when brought back.
+        reg.update().catch(function () {});
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') reg.update().catch(function () {});
+        });
+      }).catch(function () { /* offline support unavailable */ });
+    });
   }
 
   // Test hook (used by the browser smoke test).
