@@ -1,0 +1,5 @@
+node_modules/
+_render.html
+# Real rosters contain colleagues' names and staff IDs – never commit them to a public repo.
+test/fixtures/*.pdf
+test/spotcheck.json

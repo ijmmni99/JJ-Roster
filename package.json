@@ -1,0 +1,17 @@
+{
+  "name": "my-roster",
+  "version": "1.0.0",
+  "description": "My Roster \u2013 turn a ward duty-roster PDF into a personal shift calendar (PWA).",
+  "scripts": {
+    "test": "node test/parse.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ijmmni99/JJ-Roster.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "pdfjs-dist": "3.11.174"
+  },
+  "private": true
+}
