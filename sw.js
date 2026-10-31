@@ -3,7 +3,7 @@
  * - pdf.js + icons: cache-first (large, rarely change).
  * Bump VERSION on every release.
  */
-const VERSION = 'myroster-v4';
+const VERSION = 'myroster-v5';
 const SHELL = [
   './',
   'index.html',

@@ -3,7 +3,7 @@
   'use strict';
 
   var KEY = 'myroster.v1';
-  var APP_VERSION = '1.4';
+  var APP_VERSION = '1.5';
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   var DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var Codes = window.ShiftCodes;
@@ -125,7 +125,7 @@
         btn.classList.add('has');
         btn.style.background = c.bg;
         btn.style.color = c.fg;
-        btn.appendChild(el('span', 'code' + (s.code.length > 3 ? ' long' : ''), s.code));
+        btn.appendChild(el('span', 'code' + (s.code.length > 5 ? ' xlong' : s.code.length > 3 ? ' long' : ''), s.code));
         btn.appendChild(el('span', 'note', s.note || ''));
         label += ': ' + inf.name + (s.note ? ', note ' + s.note : '');
       } else {
@@ -154,7 +154,7 @@
       if (counts[inf.cat] != null) counts[inf.cat]++;
       if (!used[inf.code]) used[inf.code] = inf;
     });
-    var order = ['m', 'e', 'n', 'no', 'rd', 'al', 'd', 'ph', 'unk'];
+    var order = ['m', 'e', 'n', 'dbl', 'no', 'rd', 'al', 'd', 'ph', 'unk'];
     var legend = Object.keys(used).map(function (k) { return used[k]; })
       .sort(function (a, b) { return order.indexOf(a.cat) - order.indexOf(b.cat) || a.code.localeCompare(b.code); });
     return {
@@ -191,7 +191,7 @@
   }
 
   // ---------- Day detail ----------
-  var QUICK_CODES = ['M', 'E', 'N', 'NO', 'RD', 'AL', 'D', 'PH'];
+  var QUICK_CODES = ['M', 'E', 'N', 'NO', '7-7M', '7-7N', 'DOUBLE', 'RD', 'ORD', 'AL', 'MC', 'EL', 'MRL', 'D', 'DD', 'TRAINING', 'PH', 'RPH', 'GPH'];
 
   function openDay(key) {
     var d = parseIso(key);
@@ -250,7 +250,7 @@
     }
     QUICK_CODES.forEach(function (code) {
       var c = Codes.colours(Codes.info(code).cat);
-      var b = el('button', 'chip pick', code);
+      var b = el('button', 'chip pick' + (code.length > 3 ? ' long' : ''), code);
       b.type = 'button'; b.dataset.code = code;
       b.style.background = c.bg; b.style.color = c.fg;
       b.addEventListener('click', function () { codeIn.value = code; syncChips(); });
