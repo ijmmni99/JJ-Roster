@@ -132,6 +132,7 @@
         btn.appendChild(el('span', 'note', s && s.note ? s.note : ''));
         label += ': no shift';
       }
+      if (s && s.edited) btn.classList.add('edited');
       if (key === today) btn.classList.add('today');
       btn.setAttribute('aria-label', label);
       grid.appendChild(btn);
@@ -189,10 +190,18 @@
   }
 
   // ---------- Day detail ----------
+  var QUICK_CODES = ['M', 'E', 'N', 'NO', 'RD', 'AL', 'D', 'PH'];
+
   function openDay(key) {
-    var s = state.shifts[key];
     var d = parseIso(key);
     $('dayTitle').textContent = DOW[d.getDay()] + ', ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    showDayView(key);
+    $('dayDlg').showModal();
+  }
+
+  function showDayView(key) {
+    $('dayDlg').classList.remove('editing');
+    var s = state.shifts[key];
     var body = $('dayBody');
     body.textContent = '';
     var hero = el('div', 'day-hero');
@@ -204,10 +213,10 @@
       hero.appendChild(big);
       var t = el('div');
       t.appendChild(el('div', 'meaning', inf.name));
-      t.appendChild(el('div', 'sub', Codes.isOff(s.code) ? 'Not a working day' : 'Working day'));
+      t.appendChild(el('div', 'sub', (Codes.isOff(s.code) ? 'Not a working day' : 'Working day') + (s.edited ? ' · edited by you' : '')));
       hero.appendChild(t);
     } else {
-      hero.appendChild(el('div', 'meaning', 'No shift in the roster for this day.'));
+      hero.appendChild(el('div', 'meaning', 'No shift saved for this day.'));
     }
     body.appendChild(hero);
     if (s && s.note) {
@@ -216,7 +225,80 @@
       nb.appendChild(el('div', 'val', s.note));
       body.appendChild(nb);
     }
-    $('dayDlg').showModal();
+    var edit = el('button', 'btn', s && s.code ? 'Edit this day' : 'Add a shift');
+    edit.type = 'button';
+    edit.addEventListener('click', function () { showDayEdit(key); });
+    body.appendChild(edit);
+  }
+
+  function showDayEdit(key) {
+    $('dayDlg').classList.add('editing');
+    var s = state.shifts[key] || { code: '', note: '' };
+    var body = $('dayBody');
+    body.textContent = '';
+
+    var codeLbl = el('label', 'field-label', 'Shift code');
+    codeLbl.htmlFor = 'editCode';
+    body.appendChild(codeLbl);
+    var chips = el('div', 'quick-codes');
+    var codeIn = el('input', 'text-in');
+    codeIn.id = 'editCode'; codeIn.value = s.code || ''; codeIn.autocomplete = 'off';
+    codeIn.setAttribute('autocapitalize', 'characters'); codeIn.placeholder = 'e.g. M, N, RD, 7-3.30';
+    function syncChips() {
+      Array.prototype.forEach.call(chips.children, function (b) { b.classList.toggle('on', b.dataset.code === codeIn.value.trim().toUpperCase()); });
+    }
+    QUICK_CODES.forEach(function (code) {
+      var c = Codes.colours(Codes.info(code).cat);
+      var b = el('button', 'chip pick', code);
+      b.type = 'button'; b.dataset.code = code;
+      b.style.background = c.bg; b.style.color = c.fg;
+      b.addEventListener('click', function () { codeIn.value = code; syncChips(); });
+      chips.appendChild(b);
+    });
+    codeIn.addEventListener('input', syncChips);
+    body.appendChild(chips);
+    body.appendChild(codeIn);
+
+    var noteLbl = el('label', 'field-label', 'Note (optional)');
+    noteLbl.htmlFor = 'editNote';
+    body.appendChild(noteLbl);
+    var noteIn = el('input', 'text-in');
+    noteIn.id = 'editNote'; noteIn.value = s.note || ''; noteIn.autocomplete = 'off'; noteIn.placeholder = 'e.g. 7-9, PRECEP';
+    body.appendChild(noteIn);
+    syncChips();
+
+    // Enter key saves instead of closing the dialog.
+    [codeIn, noteIn].forEach(function (inp) {
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); doSave(); } });
+    });
+
+    var row = el('div', 'edit-actions');
+    var cancel = el('button', 'btn', 'Cancel'); cancel.type = 'button';
+    cancel.addEventListener('click', function () { showDayView(key); });
+    var saveBtn = el('button', 'btn primary', 'Save'); saveBtn.type = 'button';
+    saveBtn.addEventListener('click', doSave);
+    row.appendChild(cancel); row.appendChild(saveBtn);
+    body.appendChild(row);
+
+    if (state.shifts[key]) {
+      var clear = el('button', 'btn danger', 'Clear this day'); clear.type = 'button';
+      clear.addEventListener('click', function () {
+        delete state.shifts[key];
+        save(); renderMonth(); showDayView(key);
+        toast('Day cleared.');
+      });
+      body.appendChild(clear);
+    }
+    body.appendChild(el('p', 'fine', 'Uploading a roster that covers this date will replace your edit.'));
+
+    function doSave() {
+      var code = codeIn.value.trim().toUpperCase().replace(/\s+/g, ' ');
+      var note = noteIn.value.trim();
+      if (!code && !note) { delete state.shifts[key]; }
+      else state.shifts[key] = { code: code, note: note, edited: true };
+      save(); renderMonth(); showDayView(key);
+      toast('Saved.');
+    }
   }
 
   // ---------- Upload & parse ----------
@@ -677,6 +759,11 @@
     window.visualViewport.addEventListener('scroll', function () { if (document.querySelector('#pickerDlg[open]')) window.scrollTo(0, 0); });
   }
   window.addEventListener('resize', syncViewport);
+
+  // Ask the browser to keep our storage (less likely to be cleared under storage pressure).
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persisted().then(function (p) { if (!p) navigator.storage.persist(); }).catch(function () {});
+  }
 
   bind();
   render();

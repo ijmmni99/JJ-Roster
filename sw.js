@@ -1,5 +1,5 @@
 /* My Roster service worker: cache-first app shell (pdf.js bundled locally for offline use). */
-const VERSION = 'myroster-v2';
+const VERSION = 'myroster-v3';
 const SHELL = [
   './',
   'index.html',
